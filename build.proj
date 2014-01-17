@@ -1,0 +1,84 @@
+<Project ToolsVersion="4.0" DefaultTargets="All" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildProjectDirectory)\tools\MSBuildCommunityTasks\MSBuild.Community.Tasks.Targets"/>
+  
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)'==''">Release</Configuration>
+    <Version>$(BUILD_NUMBER)</Version>
+    <GitCommitHash>$(BUILD_VCS_NUMBER)</GitCommitHash>
+    <GitCommitHash Condition=" '$(GitCommitHash)' != '' ">$(GitCommitHash.Substring(0, 8))</GitCommitHash>
+    <!-- dev config -->
+    <Version Condition=" '$(Version)' == '' ">0.0.0.1</Version>
+    <SourceDir>$(MSBuildProjectDirectory)\src</SourceDir>
+    <ArtifactsDir>$(MSBuildProjectDirectory)\artifacts</ArtifactsDir>
+    <BuildDir>$(MSBuildProjectDirectory)\build</BuildDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <NuGet Include="$(MSBuildProjectDirectory)\src\.nuget\nuget.exe" />
+    <SignTool Include="$(MSBuildProjectDirectory)\tools\winsdk\signtool.exe" />
+  </ItemGroup>
+
+  <Target Name="Clean">
+    <RemoveDir Directories="$(BuildDir)" />
+    <RemoveDir Directories="$(ArtifactsDir)" />
+  </Target>
+  
+  <Target Name="Version" DependsOnTargets="Clean">
+    <Message Text="=========== Version ===========" Importance="High" />
+
+    <GitVersion LocalPath="$(MSBuildProjectDirectory)" Condition=" '$(GitCommitHash)' == '' ">
+      <Output TaskParameter="CommitHash" PropertyName="GitCommitHash" />
+    </GitVersion>
+
+    <AssemblyInfo CodeLanguage="CS"
+                  OutputFile="$(SourceDir)\Illallangi.RestClient\Properties\AssemblyInfo.cs"
+                  AssemblyTitle="REST Client"
+                  AssemblyDescription=""
+                  AssemblyCompany="Illallangi Enterprises"
+                  AssemblyProduct="REST Client"
+                  AssemblyCopyright="Copyright © Illallangi Enterprises 2014"
+                  ComVisible="false"
+                  AssemblyInformationalVersion="Built from hash '$(GitCommitHash)'"
+                  Guid="efaf6e60-43c8-43c2-a00b-720a6f14fc54"
+                  AssemblyVersion="$(Version)"
+                  AssemblyFileVersion="$(Version)"
+                  Condition="$(Version) != '0.0.0.1'" />
+  </Target>
+
+  <Target Name="Compile" DependsOnTargets="Version">
+    <Message Text="=========== Compile ===========" Importance="High" />
+
+    <MSBuild Projects="$(SourceDir)\Illallangi.RestClient.sln" Properties="Configuration=$(Configuration)" Targets="Rebuild" />
+  </Target>
+
+  <Target Name="Copy" DependsOnTargets="Compile">
+    <Message Text="=========== Copy ===========" Importance="High" />
+
+    <MakeDir Directories="$(BuildDir)\bin\lib" />
+    <Copy SourceFiles="$(SourceDir)\Illallangi.RestClient\bin\$(Configuration)\Illallangi.RestClient.dll"
+          DestinationFolder="$(BuildDir)\bin\lib" />
+    <Exec Command='"@(SignTool)" sign /sha1 $(Certificate) /sm /t http://timestamp.verisign.com/scripts/timstamp.dll "$(BuildDir)\bin\lib\Illallangi.HttpClient.dll"' 
+          Condition="$(Certificate) != ''"/>
+  </Target>
+
+  <Target Name="Zip" DependsOnTargets="Copy">
+    <Message Text="=========== Zip ===========" Importance="High" />
+
+    <CreateItem Include="$(BuildDir)\bin\**\*.*" >
+      <Output ItemName="ZipFiles" TaskParameter="Include"/>
+    </CreateItem>
+
+    <Zip ZipFileName="$(ArtifactsDir)\Illallangi Enterprises REST Client v$(Version).zip" WorkingDirectory="$(BuildDir)\bin" Files="@(ZipFiles)" />
+  </Target>
+
+  <Target Name="NuGet" DependsOnTargets="Copy">
+    <Message Text="=========== NuGet ===========" Importance="High" />
+    <Exec Command='"@(NuGet)" pack "$(MSBuildProjectDirectory)\build.nuspec" -OutputDirectory $(ArtifactsDir) -BasePath $(BuildDir)\bin -Version $(Version) -verbosity detailed -NoPackageAnalysis' />
+  </Target>
+
+  <Target Name="All" DependsOnTargets="Zip;NuGet">
+    <Message Text="=========== All Done ===========" Importance="High" />
+  </Target>
+
+</Project>
