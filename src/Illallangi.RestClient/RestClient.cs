@@ -37,10 +37,11 @@ namespace Illallangi
             this.currentRestCache = restCache;
             this.currentLog = log ?? new NoOpLogger();
 
-            this.Log.DebugFormat(@"RestClient(baseUrl=""{0}"", defaultParameters=""{1}"", log = ""{2}"")",
-                this.BaseUrl,
-                this.DefaultParameters,
-                this.Log);
+            this.Log.DebugFormat(
+                    @"RestClient(baseUrl=""{0}"", defaultParameters=""{1}"", log = ""{2}"")",
+                    this.BaseUrl,
+                    this.DefaultParameters,
+                    this.Log);
         }
 
         #endregion
