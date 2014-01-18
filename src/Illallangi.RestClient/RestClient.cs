@@ -179,7 +179,7 @@ namespace Illallangi
 
             // Add cache entry
             var header = restResponse.Headers.SingleOrDefault(response => response.Name.Equals("etag", StringComparison.InvariantCultureIgnoreCase));
-            if (null != header)
+            if (null != header && null != this.RestCache)
             {
                 this.Log.DebugFormat(@"Adding result to cache with etag of {0}", header.Value.ToString());
                 this.RestCache.Create(this.BaseUrl, resource.ToString(), header.Value.ToString(), restResponse.Content);
