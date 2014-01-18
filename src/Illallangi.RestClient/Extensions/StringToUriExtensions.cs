@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Tavis.UriTemplates;
 using System.Linq;
 
-namespace Illallangi.RestClient
+namespace Illallangi.Extensions
 {
-    public static class StringUriExtensions
+    public static class StringToUriExtensions
     {
         public static Uri TemplateWith(this string uri, params IEnumerable<KeyValuePair<string, string>>[] parameterArgs)
         {
