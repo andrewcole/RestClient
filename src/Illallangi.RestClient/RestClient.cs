@@ -164,11 +164,11 @@ namespace Illallangi
             this.Log.DebugFormat(@"Executing request");
             var restResponse = this.RestSharpClient.Execute(request);
 
-            // Cache Hit and Not Modified response - set content and return
+            // Cache Hit and Not Modified response - return cached value
             if (null != cache && HttpStatusCode.NotModified == restResponse.StatusCode)
             {
                 this.Log.DebugFormat(@"Not modified - returning cached value");
-                restResponse.Content = cache.Content;
+                return cache.Content;
             }
 
             // Delete stale cache
