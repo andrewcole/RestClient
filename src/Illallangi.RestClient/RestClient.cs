@@ -153,14 +153,14 @@ namespace Illallangi
                         null :
                         this.RestCache.Retrieve(this.BaseUrl, resource.ToString());
 
-            if (null != cache && CacheMode.ReturnOnHit == cacheMode)
+            if (null != cache && (CacheMode.ReturnOnHit == cacheMode || CacheMode.ForceCache == cacheMode))
             {
-                this.Log.DebugFormat(@"Cache Hit and Return on Hit mode - returning cached value");
+                this.Log.DebugFormat(@"Cache Hit and ReturnOnHit or ForceCache mode - returning cached value");
                 return cache.Content;
             }
 
             // Cache Hit - add If-None-Match header to request
-            if (null != cache)
+            if (null != cache && CacheMode.ForceCache.ToString() != cache.ETag)
             {
                 this.Log.DebugFormat(@"Cache Hit - adding If-None-Match {0}", cache.ETag);
                 request.AddHeader("If-None-Match", cache.ETag);
@@ -184,12 +184,20 @@ namespace Illallangi
                 this.RestCache.Delete(cache);
             }
 
-            // Add cache entry
-            var header = restResponse.Headers.SingleOrDefault(response => response.Name.Equals("etag", StringComparison.InvariantCultureIgnoreCase));
-            if (null != header && null != this.RestCache)
-            {
-                this.Log.DebugFormat(@"Adding result to cache with etag of {0}", header.Value.ToString());
-                this.RestCache.Create(this.BaseUrl, resource.ToString(), header.Value.ToString(), restResponse.Content);
+            if (null != this.RestCache)
+            { 
+                // Add cache entry
+                var header = restResponse.Headers.SingleOrDefault(response => response.Name.Equals("etag", StringComparison.InvariantCultureIgnoreCase));
+                if (null != header)
+                {
+                    this.Log.DebugFormat(@"Adding result to cache with etag of {0}", header.Value.ToString());
+                    this.RestCache.Create(this.BaseUrl, resource.ToString(), header.Value.ToString(), restResponse.Content);
+                }
+                else if (CacheMode.ForceCache == cacheMode)
+                {
+                    this.Log.DebugFormat(@"Adding result to cache with etag of {0}", CacheMode.ForceCache.ToString());
+                    this.RestCache.Create(this.BaseUrl, resource.ToString(), CacheMode.ForceCache.ToString(), restResponse.Content);
+                }
             }
 
             // Return
