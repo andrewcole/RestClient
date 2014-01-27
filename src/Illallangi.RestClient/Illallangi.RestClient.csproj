@@ -49,6 +49,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CacheMode.cs" />
     <Compile Include="IRestCache.cs" />
     <Compile Include="IRestCacheEntry.cs" />
     <Compile Include="IRestClient.cs" />

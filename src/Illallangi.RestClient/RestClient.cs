@@ -100,45 +100,45 @@ namespace Illallangi
 
         #region Methods
 
-        public string GetContent(string uri, IEnumerable<KeyValuePair<string, string>> parameters = null)
+        public string GetContent(string uri, IEnumerable<KeyValuePair<string, string>> parameters = null, CacheMode cacheMode = CacheMode.Enabled)
         {
             this.Log.DebugFormat(
                     @"RestClient.GetContent(uri=""{0}"", parameters=""{1}"")",
                     uri,
                     parameters);
             
-            return this.GetContent(uri.TemplateWith(parameters, this.DefaultParameters));
+            return this.GetContent(uri.TemplateWith(parameters, this.DefaultParameters), cacheMode);
         }
 
-        public string GetContent(Uri uri)
+        public string GetContent(Uri uri, CacheMode cacheMode = CacheMode.Enabled)
         {
             this.Log.DebugFormat(
                     @"RestClient.GetContent(uri=""{0}"")",
                     uri);
 
-            return this.Execute(uri);
+            return this.Execute(uri, cacheMode);
         }
 
-        public T GetObject<T>(string uri, IEnumerable<KeyValuePair<string, string>> parameters = null) where T : new()
+        public T GetObject<T>(string uri, IEnumerable<KeyValuePair<string, string>> parameters = null, CacheMode cacheMode = CacheMode.Enabled) where T : new()
         {
             this.Log.DebugFormat(
                     @"RestClient.GetObject<T>(uri=""{0}"", parameters=""{1}"")",
                     uri,
                     parameters); 
 
-            return this.GetObject<T>(uri.TemplateWith(parameters, this.DefaultParameters));
+            return this.GetObject<T>(uri.TemplateWith(parameters, this.DefaultParameters), cacheMode);
         }
 
-        public T GetObject<T>(Uri uri) where T : new()
+        public T GetObject<T>(Uri uri, CacheMode cacheMode = CacheMode.Enabled) where T : new()
         {
             this.Log.DebugFormat(
                     @"RestClient.GetObject<T>(uri=""{0}"")",
                     uri);
             
-            return JsonConvert.DeserializeObject<T>(this.Execute(uri));
+            return JsonConvert.DeserializeObject<T>(this.Execute(uri, cacheMode));
         }
 
-        private string Execute(Uri uri)
+        private string Execute(Uri uri, CacheMode cacheMode = CacheMode.Enabled)
         {
             this.Log.DebugFormat(@"RestClient.Execute(uri=""{0}"")", uri);
 
@@ -152,6 +152,12 @@ namespace Illallangi
             var cache = (null == this.RestCache) ? 
                         null :
                         this.RestCache.Retrieve(this.BaseUrl, resource.ToString());
+
+            if (null != cache && CacheMode.ReturnOnHit == cacheMode)
+            {
+                this.Log.DebugFormat(@"Cache Hit and Return on Hit mode - returning cached value");
+                return cache.Content;
+            }
 
             // Cache Hit - add If-None-Match header to request
             if (null != cache)
