@@ -21,3 +21,4 @@ build/
 
 CommonAssemblyInfo.cs
 Thumbs.db
+/build.log
