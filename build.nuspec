@@ -12,9 +12,10 @@
     <copyright>Copyright 2014</copyright>
     <tags>REST</tags>
     <dependencies>
-      <dependency id="Common.Logging" version="2.0.0" />
-      <dependency id="Newtonsoft.Json" version="5.0.8" />
-      <dependency id="RestSharp" version="104.4.0"  />
+      <dependency id="Common.Logging" version="2.2.0" />
+      <dependency id="Common.Logging.Core" version="2.2.0" />
+      <dependency id="Newtonsoft.Json" version="6.0.1" />
+      <dependency id="RestSharp" version="104.4.0" />
       <dependency id="Tavis.UriTemplates" version="0.4" />
     </dependencies>
   </metadata>
