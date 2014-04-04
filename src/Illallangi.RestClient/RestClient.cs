@@ -12,6 +12,7 @@ namespace Illallangi
 
     public class RestClient : IRestClient
     {
+        
         #region Fields
 
         private readonly string currentBaseUrl;
@@ -26,16 +27,24 @@ namespace Illallangi
 
         private RestSharp.IRestClient currentRestSharpClient;
 
+        private readonly JsonSerializerSettings currentJsonSerializerSettings;
+
         #endregion
 
         #region Constructor
 
-        public RestClient(string baseUrl, IEnumerable<KeyValuePair<string, string>> defaultParameters = null, IRestCache restCache = null, ILog log = null)
+        public RestClient(
+            string baseUrl, 
+            IEnumerable<KeyValuePair<string, string>> defaultParameters = null, 
+            IRestCache restCache = null, 
+            ILog log = null, 
+            JsonSerializerSettings jsonSerializerSettings = null)
         {
             this.currentBaseUrl = baseUrl;
             this.currentDefaultParameters = defaultParameters;
             this.currentRestCache = restCache;
             this.currentLog = log ?? new NoOpLogger();
+            this.currentJsonSerializerSettings = jsonSerializerSettings ?? new JsonSerializerSettings();
 
             this.Log.DebugFormat(
                     @"RestClient(baseUrl=""{0}"", defaultParameters=""{1}"", log = ""{2}"")",
@@ -95,7 +104,15 @@ namespace Illallangi
                 return this.currentRestSharpClient ?? (this.currentRestSharpClient = new RestSharp.RestClient(this.BaseUrl));
             }
         }
-        
+
+        private JsonSerializerSettings JsonSerializerSettings
+        {
+            get
+            {
+                return this.currentJsonSerializerSettings;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -135,7 +152,7 @@ namespace Illallangi
                     @"RestClient.GetObject<T>(uri=""{0}"")",
                     uri);
             
-            return JsonConvert.DeserializeObject<T>(this.Execute(uri, cacheMode));
+            return JsonConvert.DeserializeObject<T>(this.Execute(uri, cacheMode), this.JsonSerializerSettings);
         }
 
         private string Execute(Uri uri, CacheMode cacheMode = CacheMode.Enabled)
